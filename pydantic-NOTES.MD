@@ -119,3 +119,49 @@ Pydantic also provides more advanced, optional data types which we can use in ou
 ```bash
 pip install 'pydantic[email]'
 ```
+
+Below is an example using some of these classes:
+
+```python
+from pydantic import EmailStr, PositiveInt, conlist, Field, HttpUrl
+
+class Address(pydantic.BaseModel):
+    street: str
+    city: str
+    state: str
+    zip_code: str
+
+class Employee(pydantic.BaseModel):
+    name: str
+    email: EmailStr  # validates that the email is in a proper format
+    position: str
+
+class Owner(pydantic.BaseModel):
+    name: str
+    email: EmailStr
+
+class Restaurant(pydantic.BaseModel):
+    name: str = Field(..., pattern=r"^[a-zA-Z0-9-' ]+$")
+    address: Address
+    employees: conlist(Employee, min_length=2)  # list of Employee items with a minimum of 2 employees
+    number_of_seats: PositiveInt  # validates that the number of seats is a positive integer
+    owner: Owner
+    website: Optional[HttpUrl] = None
+
+newRestaurant = Restaurant(
+    name="Gourmet Haven",
+    address=Address(
+        street="456 Elm St",
+        city="Springfield",
+        state="IL",
+        zip_code="62704"
+    ),
+    employees=[
+        Employee(name="Alice Smith", email="alice@smith.com", position="Chef"),
+        Employee(name="Bob Johnson", email="bob@johnson.com", position="Manager")
+    ],
+    number_of_seats=50,
+    owner=Owner(name="Charlie Brown", email="charlie@peanuts.com"),
+    website="https://www.gourmethaven.com"
+)
+```
