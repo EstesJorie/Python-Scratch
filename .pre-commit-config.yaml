@@ -18,5 +18,5 @@ repos:
     hooks:
       - id: uv-lock-freshness
         name: Check uv.lock file
-        entry: python scripts/check_uv_lock.py
+        entry: python hooks/check_uv_lock.py
         language: python
