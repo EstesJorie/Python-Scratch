@@ -1,4 +1,5 @@
-#
+![LOGO](./img/logo.png)
+# Python Scratch Repo
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.14%2B-blue)](#)
