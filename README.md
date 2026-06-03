@@ -1,4 +1,5 @@
-![LOGO](./img/logo.png)
+<img src="./img/logo.png" alt="Logo" width=125 height=175>
+
 # Python Scratch Repo
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
