@@ -1,4 +1,4 @@
-# FastAPI
+# FastAPI
 
 Python web-framework for creating APIs.
 
