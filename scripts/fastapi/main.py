@@ -1,7 +1,24 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+import os
+
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 app = FastAPI()  # create instance of FastAPI
+
+templates = Jinja2Templates(directory="templates")  # set up templates
+if templates is None:
+    raise ValueError(
+        "Templates directory not found. Please ensure the 'templates' folder exists."
+    )
+
+static_dir = "static"
+if not os.path.isdir(static_dir):
+    raise ValueError(
+        f"Static directory '{static_dir}' not found. Please ensure the 'static' folder exists."
+    )
+
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 posts: list[dict] = [
     {
@@ -22,13 +39,15 @@ posts: list[dict] = [
 
 
 @app.get(
-    "/", response_class=HTMLResponse, include_in_schema=False
+    "/", include_in_schema=False, name="home"
 )  # define a route for the root endpoint
 @app.get(
-    "/posts", response_class=HTMLResponse, include_in_schema=False
+    "/posts", include_in_schema=False, name="posts"
 )  # stack routes to the same function
-def home():
-    return f"<h1>{posts[0]['title']}</h1>"
+def home(request: Request):  # define the function to handle the request
+    return templates.TemplateResponse(
+        request, "home.html", {"posts": posts, "title": "Home"}
+    )  # render the template with the posts data
 
 
 @app.get("/api/posts")
