@@ -243,7 +243,7 @@ def get_post(post_id: int):
 
 In the above example we create a new path, to return a specific post at a specifed post id. The `{post_id}` is the Path parameter which tells FastAPI it is part of the URL which is a variable. Whatever value we enter there is then pased into function as the variable `post_id`. The type hint allows us to automatically validate that the input is correct.
 
-### Error Handling
+### Error Handling
 
 One major issue arises from this `return {"error": "Post not found"}` as if we go to an post id that does not exist, it will still return a 200 SUCCESS message. This behaviour is contradictory and rather confusing as we would expect it return an error. Lets import the `HTTPExecption` and `status` objects from FastAPI to ensure we correctly raise the error. The `HTTPException` is used to return correct HTTP error responses, and `status` provides us with a list of HTTP status codes.
 
