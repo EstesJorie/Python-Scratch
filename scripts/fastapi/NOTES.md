@@ -227,3 +227,105 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 ```
 
 This `mount` method takes three arguments; the first is the URL where the static files will be located, the second is the instance of the StaticFiles object which we are using to point at our static directory, and the third is the name which we can use as a reference in our templates.
+
+## Path Parameters
+
+Path paramaters help to grab specifc parts of data, instead of returning all info at once.
+
+```python
+@app.get("/api/posts/{post_id}")
+def get_post(post_id: int):
+    for post in posts:
+        if post.get("id") == post_id:
+            return post
+    return {"error": "Post not found"}
+```
+
+In the above example we create a new path, to return a specific post at a specifed post id. The `{post_id}` is the Path parameter which tells FastAPI it is part of the URL which is a variable. Whatever value we enter there is then pased into function as the variable `post_id`. The type hint allows us to automatically validate that the input is correct.
+
+### Error Handling
+
+One major issue arises from this `return {"error": "Post not found"}` as if we go to an post id that does not exist, it will still return a 200 SUCCESS message. This behaviour is contradictory and rather confusing as we would expect it return an error. Lets import the `HTTPExecption` and `status` objects from FastAPI to ensure we correctly raise the error. The `HTTPException` is used to return correct HTTP error responses, and `status` provides us with a list of HTTP status codes.
+
+```python
+@app.get("/api/posts/{post_id}")
+def get_post(post_id: int):
+    for post in posts:
+        if post.get("id") == post_id:
+            return post
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+```
+
+Now, we can make this response look more human readable by using HTML, and some more FastAPI objects. First, lets create our error page
+
+```html
+{% extends "layout.html" %}
+{% block content %}
+  <article class="content-section py-3 px-4 mb-4">
+    <h1>
+      <a class="article-title" href="#">Oops... {{ status_code }} Error</a>
+    </h1>
+    <p class="article-content">{{ message }}</p>
+  </article>
+{% endblock content %}
+```
+
+Then we will need the following new imports:
+
+```python
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+```
+
+We give the Starlette HTTP exception an alias as to not confuse it with the FastAPI HTTPException we used earlier. We can create a general http exception handler using this Starlette HTTP Exception:
+
+```python
+@app.exception_handler(StarletteHTTPException)
+def general_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    message = (
+        exc.detail
+        if exc.detail
+        else "An unexpected error occurred. Please try check your request and try again."
+    )
+
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": message},
+        )
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "status_code": exc.status_code,
+            "title": exc.status_code,
+            "message": message,
+        },
+        status_code=exc.status_code
+    )
+```
+
+We use the `@app.exception_handler` decorator to capture a Starlette HTTP Exception. We set a message that is equal to the detail of the exception if provided and falls back to a default if not. We then check to see if the URL path starts with `/api` and if so we return a JSON response. If is not an API response then we return our HTML error template.
+
+However, this exception handler we only handle HTTP exceptions. We will need a separate handler for *validation errors*.
+
+```python
+@app.exception_handler(RequestValidationError)
+def validation_exception_handler(request: Request, exc: RequestValidationError):
+    if request.url.path.startswith("/api"):
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": exc.errors()},
+        )
+    return templates.TemplateResponse(
+        request,
+        "error.html",
+        {
+            "status_code": status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "title": status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "message": "Validation error. Please check your request and try again.",
+        },
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+    )
+```
