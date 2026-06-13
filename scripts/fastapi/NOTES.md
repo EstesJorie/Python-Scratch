@@ -6,7 +6,7 @@ Python web-framework for creating APIs.
 
 First, we need to install FastAPI. We are using `uv` in this project so run:
 
-``zsh
+```zsh
 uv add "fastapi[standard]"
 ```
 
